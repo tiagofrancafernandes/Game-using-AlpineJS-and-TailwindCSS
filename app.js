@@ -41,6 +41,18 @@ window.NumberHelpers = {
     },
 };
 
+window.tryJsonDecode = (content, defaultValue = null) => {
+    try {
+      if (!content || typeof content !== 'string') {
+        return defaultValue;
+      }
+
+      return JSON.parse(content);
+    } catch(error) {
+      return defaultValue;
+    }
+}
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('gameData', () => ({
         playerName: null,
@@ -48,7 +60,6 @@ document.addEventListener('alpine:init', () => {
         score: 0,
         giftOn: 0,
         position: 0,
-        topMessage: '',
         timerConfig: {
             minutes: 1,
             seconds: 0,
@@ -65,11 +76,15 @@ document.addEventListener('alpine:init', () => {
         },
         latestScores: [],
         showResetScoreConfirmModal: false,
+        showControls: false,
         init() {
             this.loadLatestScores();
             this.showModal('Square Game');
             // this.startNewGame();
             this.playerName = localStorage.getItem('playerName') || 'Player';
+
+            let showControls = window?.tryJsonDecode(localStorage.getItem('showControls'), false) || false;
+            this.showControls = showControls;
         },
 
         get width() {
@@ -126,11 +141,19 @@ document.addEventListener('alpine:init', () => {
                 title: 'AlpineJS + TailwindCSS Game',
                 year,
                 logoSrc,
+                logoPath,
             };
         },
 
         openResetScoreConfirm() {
             this.showResetScoreConfirmModal = true;
+        },
+
+        toggleShowControls() {
+            this.showControls = !this.showControls;
+            localStorage.setItem('showControls', this.showControls);
+
+            this.focusOnGameControl();
         },
 
         closeResetScoreConfirm() {
@@ -249,7 +272,6 @@ document.addEventListener('alpine:init', () => {
 
             this.countdownTimer(minutes, seconds, (fmt) => {
                 let message = 'End of time!';
-                this.topMessage = message;
 
                 let currentScore = this.generateCurrentScore();
 
@@ -373,9 +395,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         startNewGame() {
-            // this.timeLeft = '02:00';
             this.score = 0;
-            this.topMessage = '';
             this.hidenModal();
             this.closeResetScoreConfirm();
             this.newRandomPosition();
