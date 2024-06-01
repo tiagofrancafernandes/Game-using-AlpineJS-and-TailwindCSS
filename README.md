@@ -6,4 +6,15 @@
 
 [Demo](https://tiagofrancafernandes.github.io/Game-using-AlpineJS-and-TailwindCSS/)
 
-![Demo](https://i.imgur.com/HCQZ2xi.png)
+![Demo](https://i.imgur.com/rFIgS4B.png)
+
+
+#### CHANGELOG
+
+- [2024-05-31] -
+    - Allow update player name
+    - Persist scores
+    - Show high score
+    - Live time update
+- [2024-05-30] -
+    - v1
