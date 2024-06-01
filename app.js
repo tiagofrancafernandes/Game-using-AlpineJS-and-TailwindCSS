@@ -64,6 +64,7 @@ document.addEventListener('alpine:init', () => {
             line3: '',
         },
         latestScores: [],
+        showResetScoreConfirmModal: true,
         init() {
             this.loadLatestScores();
             this.showModal('Square Game');
@@ -110,6 +111,51 @@ document.addEventListener('alpine:init', () => {
 
         get highScoreObject() {
             return this.getHighScoreObject() || {};
+        },
+
+        get appInfo() {
+            let year = (new Date()).getFullYear();
+            let url = location.origin;
+            let logoPath = '/img/mini-game-logo-color.svg'
+            let logoSrc = [url, logoPath].join('/');
+
+            return {
+                url,
+                repoUrl: 'https://github.com/tiagofrancafernandes/Game-using-AlpineJS-and-TailwindCSS',
+                name: 'Mini Game',
+                title: 'AlpineJS + TailwindCSS Game',
+                year,
+                logoSrc,
+            };
+        },
+
+        openResetScoreConfirm() {
+            this.showResetScoreConfirmModal = true;
+        },
+
+        closeResetScoreConfirm() {
+            this.showResetScoreConfirmModal = false;
+        },
+
+        __ConfirmTheResetScore() {
+            if (!this.showResetScoreConfirmModal) {
+                return;
+            }
+
+            this.latestScores = [];
+            localStorage.setItem('latestScores', JSON.stringify(this.latestScores));
+            this.closeResetScoreConfirm();
+        },
+
+        scrollToGameArea() {
+            // const gameAreaElement = document.querySelector('[data-id="before-game"]');
+            const gameAreaElement = document.querySelector('[x-data="gameData"]');
+
+            if (!gameAreaElement) {
+                return;
+            }
+
+	        gameAreaElement.scrollIntoView({ behavior: "smooth", block: "start" });
         },
 
         confirmEditName() {
@@ -335,6 +381,7 @@ document.addEventListener('alpine:init', () => {
             this.newGiftPosition();
             this.focusOnGameControl();
             this.restartTimer();
+            this.scrollToGameArea();
         },
 
         giftContentFor(value) {

@@ -11,6 +11,9 @@
 
 #### CHANGELOG
 
+- [2024-06-01] -
+    - Allow to reset scores
+    - Dynamic config
 - [2024-05-31] -
     - Allow update player name
     - Persist scores
