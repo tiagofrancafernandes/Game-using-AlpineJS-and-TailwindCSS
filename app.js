@@ -130,8 +130,8 @@ document.addEventListener('alpine:init', () => {
 
         get appInfo() {
             let year = (new Date()).getFullYear();
-            let url = location.origin;
-            let logoPath = '/img/mini-game-logo-color.svg'
+            let url = [location.origin, location.pathname].join('');
+            let logoPath = 'img/mini-game-logo-color.svg'
             let logoSrc = [url, logoPath].join('/');
 
             return {
