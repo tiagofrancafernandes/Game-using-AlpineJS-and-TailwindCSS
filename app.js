@@ -64,7 +64,7 @@ document.addEventListener('alpine:init', () => {
             line3: '',
         },
         latestScores: [],
-        showResetScoreConfirmModal: true,
+        showResetScoreConfirmModal: false,
         init() {
             this.loadLatestScores();
             this.showModal('Square Game');
@@ -377,6 +377,7 @@ document.addEventListener('alpine:init', () => {
             this.score = 0;
             this.topMessage = '';
             this.hidenModal();
+            this.closeResetScoreConfirm();
             this.newRandomPosition();
             this.newGiftPosition();
             this.focusOnGameControl();
