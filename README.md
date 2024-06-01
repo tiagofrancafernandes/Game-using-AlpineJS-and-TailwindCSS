@@ -1,4 +1,4 @@
-# Game using AlpineJS andTailwindCSS
+# Game using AlpineJS and TailwindCSS
 
 #### Criando um jogo usando o AlpineJS
 

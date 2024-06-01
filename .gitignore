@@ -1,0 +1,10 @@
+dist
+.vite
+node_modules
+*no*commit*
+*No*Commit*
+*NO*COMMIT*
+*.bkp.*
+*.bkp
+*.log
+*.out
