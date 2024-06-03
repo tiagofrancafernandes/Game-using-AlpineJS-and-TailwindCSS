@@ -93,18 +93,6 @@ window.themeManager = {
     },
 }
 
-window.themeManager.setMode(window.themeManager.isDarkMode ? 'dark' : 'light');
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.themeManager) {
-        return;
-    }
-
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener('change', event => {
-        window.themeManager.setMode(event.matches ? 'dark' : 'auto');
-    });
-});
-
 window.tryJsonDecode = (content, defaultValue = null) => {
     try {
       if (!content || typeof content !== 'string') {
@@ -219,7 +207,32 @@ document.addEventListener('alpine:init', () => {
         },
 
         get helpContent() {
-            let elements = [];
+            const easyCreateElement = (elementName, content = '', attributes = {}) => {
+                let element = document.createElement(elementName);
+                element.innerHTML = content || '';
+
+                attributes = attributes && typeof attributes === 'object' && !Array.isArray(attributes)
+                    ? attributes : {};
+
+                for (let item of Object.entries(attributes)) {
+                    let [attribute, value] = item;
+
+                    element.setAttribute(attribute, value || '');
+                }
+
+                return element;
+            }
+
+            let paragraph = (content) => {
+                return easyCreateElement('p', content, {
+                    class: 'mb-2 text-gray-500 dark:text-gray-400'
+                });
+            }
+
+            let elements = [
+                paragraph('Controls:'),
+            ];
+
             let keys = [
                 ['N', 'Start a new game'],
                 ['P', 'Play/Pause'],
@@ -263,7 +276,7 @@ document.addEventListener('alpine:init', () => {
               return component
             }
 
-            let keysContents = document.createElement('ul')
+            let keysContents = document.createElement('ul');
             keysContents.classList.add('ps-5','text-gray-500','list-disc','dark:text-gray-400');
 
             for (let item of keys) {
@@ -873,3 +886,15 @@ document.addEventListener('alpine:init', () => {
 });
 
 // Alpine.start();
+
+window.themeManager.setMode(window.themeManager.isDarkMode ? 'dark' : 'light');
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.themeManager) {
+        return;
+    }
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener('change', event => {
+        window.themeManager.setMode(event.matches ? 'dark' : 'auto');
+    });
+});

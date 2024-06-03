@@ -506,12 +506,10 @@
                                     class="mb-2 text-gray-500 dark:text-gray-400"
                                 >
                                     <div class="p-5 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-md">
-                                        <p class="mb-2 text-gray-500 dark:text-gray-400">The main difference is that the core components from Flowbite are open source under the MIT license, whereas Tailwind UI is a paid product. Another difference is that Flowbite relies on smaller and standalone components, whereas Tailwind UI offers sections of pages.</p>
-
                                         <template
                                             x-for="helpItem in helpContent"
                                         >
-                                            <div x-html="helpItem.innerHTML"></div>
+                                            <div x-html="helpItem.outerHTML"></div>
                                         </template>
                                     </div>
                                 </div>
