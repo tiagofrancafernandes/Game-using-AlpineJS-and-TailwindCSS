@@ -41,15 +41,79 @@ window.NumberHelpers = {
     },
 };
 
+window.themeManager = {
+    get isDarkMode() {
+        return localStorage.getItem('theme') === 'dark' || (
+            !localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches
+        );
+    },
+    get isLightMode() {
+        return !this.isDarkMode;
+    },
+    setMode(value = null) {
+        let darkMode = null;
+        let lightAuto = false;
+        let valueAuto = value === 'auto';
+
+        if (['dark', 'light'].includes(value)) {
+            darkMode = (value === 'dark');
+        }
+
+        if (valueAuto) {
+            darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document?.documentElement?.classList?.remove('light');
+            document?.documentElement?.classList?.remove('dark');
+        }
+
+        darkMode = darkMode !== null ? darkMode : localStorage.getItem('theme') === 'dark' || (
+            !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches
+        );
+
+        localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+
+        if (!darkMode && valueAuto) {
+            localStorage.removeItem('theme');
+        }
+
+        if (darkMode) {
+            document?.documentElement?.classList?.remove('light');
+            document?.documentElement?.classList?.add('dark');
+
+            return;
+        }
+
+        document?.documentElement?.classList?.remove('dark');
+
+        if (!lightAuto) {
+            document?.documentElement?.classList?.add('light');
+        }
+    },
+    toggleColorMode() {
+        this.setMode(this.isLightMode ? 'dark' : 'light');
+    },
+}
+
+window.themeManager.setMode(window.themeManager.isDarkMode ? 'dark' : 'light');
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.themeManager) {
+        return;
+    }
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener('change', event => {
+        window.themeManager.setMode(event.matches ? 'dark' : 'auto');
+    });
+});
+
 window.tryJsonDecode = (content, defaultValue = null) => {
     try {
       if (!content || typeof content !== 'string') {
-        return defaultValue;
+            return defaultValue;
       }
 
       return JSON.parse(content);
     } catch(error) {
-      return defaultValue;
+        return defaultValue;
     }
 }
 
@@ -70,6 +134,8 @@ document.addEventListener('alpine:init', () => {
         },
         modalMessage: {
             showModal: false,
+            showNewGameButton: true,
+            showContinueGameButton: true,
             line1: '',
             line2: '',
             line3: '',
@@ -77,7 +143,10 @@ document.addEventListener('alpine:init', () => {
         latestScores: [],
         showResetScoreConfirmModal: false,
         showControls: false,
+        showHelp: false,
+        darkMode: null,
         init() {
+            this.darkMode = window?.themeManager?.isDarkMode;
             this.loadLatestScores();
             this.showModal('Square Game');
             // this.startNewGame();
@@ -85,6 +154,10 @@ document.addEventListener('alpine:init', () => {
 
             let showControls = window?.tryJsonDecode(localStorage.getItem('showControls'), false) || false;
             this.showControls = showControls;
+        },
+
+        get isDarkMode() {
+            return this.darkMode ? true : false;
         },
 
         get width() {
@@ -145,6 +218,108 @@ document.addEventListener('alpine:init', () => {
             };
         },
 
+        get helpContent() {
+            let elements = [];
+            let keys = [
+                ['N', 'Start a new game'],
+                ['P', 'Play/Pause'],
+                ['R', 'Restart the game'],
+                ['S', 'Abrupt stop in current game'],
+
+                // L
+            ];
+
+            let createKeyComponent = (content) => {
+                component = document.createElement('span');
+                component.innerHTML = content;
+                component.classList.add(
+                    'inline',
+                    'text-center',
+                    'w-4',
+                    'h-4',
+                    'px-1',
+                    'justify-center',
+                    'text-xs',
+                    'font-medium',
+                    'text-gray-700',
+                    'bg-white',
+                    'border',
+                    'border-gray-200',
+                    'rounded-md',
+                    'hover:bg-gray-100',
+                    'hover:text-blue-700',
+                    'focus:z-10',
+                    'focus:ring-0',
+                    'focus:ring-gray-300',
+                    'dark:focus:ring-gray-500',
+                    'dark:bg-gray-800',
+                    'focus:outline-none',
+                    'dark:text-gray-400',
+                    'dark:border-gray-600',
+                    'dark:hover:text-white',
+                    'dark:hover:bg-gray-700',
+                );
+
+              return component
+            }
+
+            let keysContents = document.createElement('ul')
+            keysContents.classList.add('ps-5','text-gray-500','list-disc','dark:text-gray-400');
+
+            for (let item of keys) {
+                let [key, text] = item;
+                let keysContent = document.createElement('li');
+                let keyEl = createKeyComponent(key);
+                keysContent.innerHTML = `${keyEl.outerHTML} ${text}`;
+                keysContents.appendChild(keysContent);
+            }
+
+            elements.push(keysContents);
+
+            return elements;
+        },
+
+        get gameIsPaused() {
+            if (!this.currentTimeLeft) {
+                return false;
+            }
+
+            if (this.currentTimeLeft?.formatTimer?.totalSeg && this.currentTimeLeft?.intervalID) {
+                return false;
+            }
+
+            if (this.currentTimeLeft?.formatTimer?.totalSeg && this.currentTimeLeft?.intervalID === null) {
+                return true;
+            }
+
+            return false;
+        },
+
+        get gameIsPlaying() {
+            if (!this.currentTimeLeft) {
+                return false;
+            }
+
+            if (
+                this.currentTimeLeft?.formatTimer
+                && this.currentTimeLeft?.formatTimer?.totalSeg > 1
+                && this.currentTimeLeft?.intervalID > 1
+            ) {
+                return true;
+            }
+
+            return false;
+        },
+
+        toggleColorMode() {
+            if (!window?.themeManager) {
+                return;
+            }
+
+            window?.themeManager?.toggleColorMode();
+            this.darkMode = window?.themeManager?.isDarkMode;
+        },
+
         openResetScoreConfirm() {
             this.showResetScoreConfirmModal = true;
         },
@@ -194,8 +369,12 @@ document.addEventListener('alpine:init', () => {
             line1 = '',
             line2 = '',
             line3 = '',
+            showNewGameButton = true,
+            showContinueGameButton = false,
         ) {
             this.modalMessage['showModal'] = true;
+            this.modalMessage['showNewGameButton'] = showNewGameButton;
+            this.modalMessage['showContinueGameButton'] = showContinueGameButton;
             this.modalMessage['line1'] = line1;
             this.modalMessage['line2'] = line2;
             this.modalMessage['line3'] = line3;
@@ -261,11 +440,13 @@ document.addEventListener('alpine:init', () => {
             return scoreData;
         },
 
-        restartTimer() {
-            let {
-                minutes,
-                seconds,
-            } = this.timerConfig;
+        restartTimer(
+            minutes = null,
+            seconds = null,
+        ) {
+            let hasValue = (minutes || seconds);
+            minutes = hasValue ? minutes : (this.timerConfig['minutes'] ?? null);
+            seconds = hasValue ? seconds : (this.timerConfig['seconds'] ?? null);
 
             minutes = globalThis?.NumberHelpers?.toInt(minutes, true);
             seconds = globalThis?.NumberHelpers?.toInt(seconds, true);
@@ -394,15 +575,83 @@ document.addEventListener('alpine:init', () => {
             return (this.getLatestScores() || [])[0] || null;
         },
 
+        pauseGame() {
+            if (this.currentTimeLeft?.intervalID && !isNaN(this.currentTimeLeft?.intervalID)) {
+                clearInterval(this.currentTimeLeft?.intervalID);
+
+                this.currentTimeLeft.intervalID = null;
+            }
+
+            this.showModal(
+                'Paused!',
+                '',
+                '',
+                true,
+                true,
+            );
+        },
+
+        continueGame() {
+            if (!this.currentTimeLeft?.formatTimer || !this.gameIsPaused) {
+                return;
+            }
+
+            this.hidenModal();
+
+            this.restartTimer(
+                null,
+                this.currentTimeLeft?.formatTimer?.totalSeg,
+            );
+
+            this.closeResetScoreConfirm();
+            this.focusOnGameControl();
+            this.scrollToGameArea();
+        },
+
+        stopGame() {
+            if (!this.gameIsPlaying) {
+                return;
+            }
+
+            if (this.currentTimeLeft?.intervalID && !isNaN(this.currentTimeLeft?.intervalID)) {
+                clearInterval(this.currentTimeLeft?.intervalID);
+            }
+
+            this.score = 0;
+            this.currentTimeLeft = {
+                formatTimer: null,
+                intervalID: null,
+            };
+
+            this.showModal(
+                'Abrupt stop!',
+                '',
+                '',
+                true,
+                false,
+            );
+        },
+
         startNewGame() {
             this.score = 0;
-            this.hidenModal();
-            this.closeResetScoreConfirm();
-            this.newRandomPosition();
-            this.newGiftPosition();
-            this.focusOnGameControl();
-            this.restartTimer();
-            this.scrollToGameArea();
+
+            this.showModal(
+                'Starting new game',
+                '',
+                '',
+                false,
+                false,
+            );
+
+            setTimeout(() => {
+                this.hidenModal();
+                this.closeResetScoreConfirm();
+                this.newRandomPosition();
+                this.newGiftPosition();
+                this.focusOnGameControl();
+                this.restartTimer();
+                this.scrollToGameArea();
+            }, 600);
         },
 
         giftContentFor(value) {
@@ -418,10 +667,20 @@ document.addEventListener('alpine:init', () => {
         },
 
         whenClickOnGameFild(event) {
+            if (!this.gameIsPlaying) {
+                return;
+            }
+
             this.focusOnGameControl();
+            this.scrollToGameArea();
         },
 
         setPosition(newPosition) {
+            if (this.gameIsPaused) {
+                return;
+            }
+
+            this.focusOnGameControl();
             newPosition = parseInt(newPosition);
 
             if (isNaN(newPosition)) {
@@ -547,6 +806,39 @@ document.addEventListener('alpine:init', () => {
 
             if (lKey && ctrlKey && shiftKey) {
                 console.clear();
+                return;
+            }
+
+            if ([code, key].includes('KeyR') && !ctrlKey && !shiftKey) {
+                this.startNewGame();
+                return;
+            }
+
+            if ([code, key].includes('KeyN') && !ctrlKey && !shiftKey) {
+                this.startNewGame();
+                return;
+            }
+
+            if ([code, key].includes('KeyS') && !ctrlKey && !shiftKey) {
+                this.stopGame();
+                return;
+            }
+
+            if ([code, key].includes('KeyP') && !ctrlKey && !shiftKey) {
+                if (!this.currentTimeLeft?.formatTimer) {
+                    return;
+                }
+
+                if (this.gameIsPlaying && !this.gameIsPaused) {
+                    this.pauseGame();
+                    return;
+                }
+
+                if (this.currentTimeLeft?.formatTimer && this.gameIsPaused) {
+                    this.continueGame();
+                    return;
+                }
+
                 return;
             }
 
