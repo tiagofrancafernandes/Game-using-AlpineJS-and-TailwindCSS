@@ -11,6 +11,13 @@
 
 #### CHANGELOG
 
+- [2024-06-03]
+    - Dark/light mode
+    - Help text
+    - New key controls (pause, restart, start and force stop)
+    - Pause game
+    - Restart game
+    - Start game
 - [2024-06-01]
     - Allow to reset scores
     - Dynamic config
